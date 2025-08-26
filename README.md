@@ -1,93 +1,37 @@
 # Photon decays
 
+# Implementation
+In the present Jupyternootbook we implement the equation derived by Dr. Mazeliauskas to compute the feed-down generated from parent particle a to a particle b due to the decay channel a-> bc. 
+
+The first cell define all relevant variables with some built-in error-handling for forbideen cases - ma = 0 - and cases used for debugging - complex square roots and similar - which print out debugging-messages which can be turn-off with the bool Debug. All of this functions' name starting with "get" and end with the variables they compute.
+
+In particular we have implemented the limit case where the child particle, b, is massless, which in particular creates three cases for the lower-integration bound qTminus - mb !=0 ,  mb = 0 && mc !=0 a and mb == 0 && mc ==0 - and  two for the upper integration case qTplus - mb ==0 and mb !==0.
+
+The integrands for the massive case and the massless case are at the end of the cell and are integrand_factor_massive and integrand_factor_massless. For the massive case we have we have also consider the case where the variable a_{-} becomes negative and change the \phi-integrand. 
+
+The second cell defined a standard MC-integration routine which uses gsl_monte_vegas. The third one defines a Integrator function which takes a function, integration limits and desired relative error. This functions uses quad a standard integration routine and if the relative error is not achieved it switches to the more sophisticated MC-integration routine. If this integration strategy is to be used, we recommend to confirm that vegas package is installed first. Or install it with:
+    pip install vegas
+While this integration method can in general achieve a greater presition, our test show that, as it is currently implemented, it is too slow. 
+
+Finally, we define a function which takes the analytical expression of a spectrum and computes the feed-down to the decay particle b - getFeedDown_anadNa. As parameters this function takes a np.array with the p_T to be computed, doubles for the the particles' masses, a function dNa_dpT defining the spectrun of the parent particle and its arguments which have to be given as a tuple or similar objects. The function allows to set the relative error EpsRel, default value 1e-4, and to swtich off the debugging outputs with bool Debug which is by default False. Additional to this function we defined getFeedDown_anadNa_safe with the same arguments, but using the Integrator function explained above.
+
+-- Note: The defined funcitons to compute all relevant terms can be easly be used to implement a function that takes the spectrum from a .txt file or .cvs instead of an analytical expression. For the moment this not done. 
+
+# Tests
+
+Both massive and massless cases have been tested using a thermal spectrum for the parent particle. No major issue has been encoutner in the code, however the massive case shows a p_T range where the implemented analytical formulas return NaN values. The massless case show this behaviour only around q_T = 0 and p_T = 0. 
+
+For the massless case we also computed the feed-down to photon spectrum coming from \pi^0\to \gamma \gamma at T = 230 MeV for this case we also computed the ration \gamma_{decay}/\pi^0 to allow comparison with experimental data. A rough comparison shows no major deviation from the computed ratio to the measre one. 
+
+For the massive case we computed the feed-down to \rho^+ \to \pi^+ \pi^0 at the same temperature. 
+
+## Particle conservation
+pending.
+
+# Extra plots
+
+After the testing section, we have plotted the behaviour of different variables as a function of q_T or p_T to study them. In particular at the end we show a plot of the integrand for mb = 0 and mb!=0  as a function of p_T and q_T. 
 
 
-## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://lin0.thphys.uni-heidelberg.de:4443/figueroa/photon-decays.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://lin0.thphys.uni-heidelberg.de:4443/figueroa/photon-decays/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
