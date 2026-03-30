@@ -4,7 +4,6 @@
 import numpy as np
 import scipy.integrate as integrate
 from scipy.special import ellipk
-from scipy.special import ellipkinc
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -84,31 +83,21 @@ def integrand_factor_massive(qT, b, ma, mb, mc, pT, Debug=False):
         am = getAminus(qT, ma, mb, mc, pT)
         ap = getAplus(qT, ma, mb, mc, pT)
         if (am < -1):
-            if ((am + ap)/(ap*am + am + ap + 1)) < 0:
+            # roots ordered -ap < am < -1 < 1; standard elliptic reduction (DLMF 19.7)
+            # gives a complete EllipticK
+            k2 = 2*(am+ap)/((1-am)*(ap-1))
+            if not (0 < k2 < 1):
                 if Debug:
-                    print("Warning! Negative sqrt found in argument of arcsin. Returning NaN.")
+                    print("Warning! k2 out of range in am<-1 branch. Returning NaN.")
                 raise ValueError()
-            argument = np.sqrt(2)*np.sqrt((am + ap)/(ap*am + am + ap + 1))
-            if (argument < -1) or (argument < 1):
-                if Debug:
-                    print("Warning: Argument outside of valid range of arcsin. Returning NaN.")
-                raise ValueError()
-            phi = np.arcsin(argument)
-            m = ((am+1)*(ap+1)/(2*(am + ap)))**2
-            denom = -1*(ap - 1)*(am + ap)/(am+1)**2
-            if ((-am-1) < 0) or ((ap - 1) < 0) or (denom < 0):
-                if Debug:
-                    print("Warning! Negative sqrt found in phiIntegral. Returning NaN.")
-                raise ValueError()
-            phiIntegral = np.sqrt(2)*np.sqrt(-am - 1)*(-1*(am + 1))**(-3/2)*np.sqrt(ap-1)*ellipkinc(phi, m)/np.sqrt(denom)
+            phiIntegral = 2*ellipk(k2)/np.sqrt((1-am)*(ap-1))
         else:
             argument = (1 - am)*(ap-1)/(2*(am+ap))
-            elliptick = ellipk(argument)
-            if (((am + 1)/(am + ap)) < 0) or ((am+1) < 0):
+            if (am+1) < 0 or not (0 <= argument < 1):
                 if Debug:
-                    print("Warning! Negative sqrt found in phiIntegral. Returning NaN.")
+                    print("Warning! Invalid EllipticK argument. Returning NaN.")
                 raise ValueError()
-            phiIntegral = np.sqrt(2)*np.sqrt((am + 1)/(am + ap))/np.sqrt(am+1)*elliptick
+            phiIntegral = np.sqrt(2)*np.sqrt((am + 1)/(am + ap))/np.sqrt(am+1)*ellipk(argument)
         return norm/pT/qT*phiIntegral
     except ValueError:
         return np.nan
@@ -122,13 +111,22 @@ def integrand_factor_massless(qT, b, ma, mb, mc, pT, Debug=False):
         norm = 2*b/np.pi
         am = getAminus(qT, ma, mb, mc, pT)
         ap = getAplus(qT, ma, mb, mc, pT)
-        argument = (1 - am)*(ap-1)/(2*(am+ap))
-        elliptick = ellipk(argument)
-        if ((am+1)/(am + ap) < 0) or ((am+1) < 0):
-            if Debug:
-                print("Warning! Negative sqrt found in phiIntegral. Returning NaN.")
-            raise ValueError()
-        phiIntegral = np.sqrt(2)*np.sqrt((am+1)/(am + ap))/np.sqrt(am+1)*elliptick
+        if am < -1:
+            # roots ordered -ap < am < -1 < 1; standard elliptic reduction (DLMF 19.7)
+            # gives a complete EllipticK
+            k2 = 2*(am+ap)/((1-am)*(ap-1))
+            if not (0 < k2 < 1):
+                if Debug:
+                    print("Warning! k2 out of range in am<-1 branch. Returning NaN.")
+                raise ValueError()
+            phiIntegral = 2*ellipk(k2)/np.sqrt((1-am)*(ap-1))
+        else:
+            argument = (1 - am)*(ap-1)/(2*(am+ap))
+            if (am+1) < 0 or not (0 <= argument < 1):
+                if Debug:
+                    print("Warning! Invalid EllipticK argument. Returning NaN.")
+                raise ValueError()
+            phiIntegral = np.sqrt(2)*np.sqrt((am+1)/(am + ap))/np.sqrt(am+1)*ellipk(argument)
         return norm*phiIntegral/qT
     except ValueError:
         return np.nan
@@ -142,12 +140,23 @@ def getFeedDown_anadNa(pT, ma, mb, mc, b, dNa_dpT, dNa_dpT_args, EpsRel=1e-4, De
     vals = np.zeros_like(pT)
     vals_err = np.zeros_like(pT)
     for i, p in enumerate(pT):
-        qmin = max(get_qTminus(ma, mb, mc, p), 0)
+        qTminus = get_qTminus(ma, mb, mc, p)
+        qmin = max(qTminus, 0)
         qmax = get_qTplus(ma, mb, mc, p)
         args = (b, ma, mb, mc, p, Debug)
         if (mb == 0) and (mc == 0):
             integ = lambda qT: integrand_factor_massless(qT, *args)*dNa_dpT(qT, *dNa_dpT_args)
-            vals[i], vals_err[i] = integrate.quad(integ, qmin, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
+            # For pT < ma/2, qTminus < 0 and the integration starts at qmin=0.
+            # qT* = -qTminus is an interior logarithmic singularity (EllipticK diverges
+            # as am -> -1). Split at qT* so quad sees it only as an endpoint singularity
+            # in each sub-interval (quad cannot use points= with infinite limits).
+            if qTminus < 0:
+                qstar = -qTminus
+                v1, e1 = integrate.quad(integ, qmin, qstar, epsabs=1e-10, epsrel=EpsRel, limit=200)
+                v2, e2 = integrate.quad(integ, qstar, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
+                vals[i], vals_err[i] = v1 + v2, e1 + e2
+            else:
+                vals[i], vals_err[i] = integrate.quad(integ, qmin, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
         else:
             integ = lambda qT: integrand_factor_massive(qT, *args)*dNa_dpT(qT, *dNa_dpT_args)
             vals[i], vals_err[i] = integrate.quad(integ, qmin, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
@@ -166,19 +175,21 @@ ini_args = (ma, T)
 mb = 0.0
 mc = 0.0
 b = 1
-pT = np.linspace(0.1, 2, 500)
+pT = 10**np.linspace(-3,1, 500)
 feedDown_vals = getFeedDown_anadNa(pT, ma, mb, mc, b, thermaldNadpT, ini_args)
 
 pi_zero_thermal = thermaldNadpT(pT, ma, T)
 photon_thermal = thermaldNadpT(pT, mb, T)
 
+
 # Spectra comparison
 plt.figure()
-plt.plot(pT, 2*feedDown_vals[0], color="green", label=r"$\pi^0$-feed-down")
-plt.plot(pT, pi_zero_thermal, color="blue", label=r"$\pi$ thermal")
-plt.plot(pT, photon_thermal, color="violet", label=r"$\gamma$ thermal")
-plt.plot(pT, photon_thermal + 2*feedDown_vals[0], label=r"$\gamma$ final")
-plt.xlim(0.09, 2)
+plt.plot(pT*1000, 2*feedDown_vals[0], color="green", label=r"$\pi^0$-feed-down")
+plt.plot(pT*1000, pi_zero_thermal, color="blue", label=r"$\pi$ thermal")
+plt.plot(pT*1000, photon_thermal, color="violet", label=r"$\gamma$ thermal")
+plt.plot(pT*1000, photon_thermal + 2*feedDown_vals[0], label=r"$\gamma$ final")
+plt.xlim(0, 2000)
+plt.ylim(0.001, 1)
 plt.yscale("log")
 plt.legend(fontsize=13, title=r"$T = 230$ MeV", title_fontsize=13, loc="best")
 plt.ylabel(r"$dN/dp_T$", fontsize=20)
@@ -187,13 +198,22 @@ plt.savefig("feeddown_spectra.pdf")
 plt.close()
 
 # Photon decay over pion spectra ratio
-ratio = 2*feedDown_vals[0] / pi_zero_thermal
+import uproot
+file = uproot.open("pi0_decay_photons.root")
+h_pi0 = file["h_pi0"]
+h_gam = file["hDecayGam"]
+values_pi0, edges =h_pi0.to_numpy()
+values_gam,_ = h_gam.to_numpy()
 plt.figure()
-plt.plot(pT, ratio, color="green", label=r"$\pi^0$-Feed-down")
+plt.stairs(values_gam/values_pi0, edges, fill=False, color='red', linewidth=2, label='Klaus Pythia')
+ratio = 2*feedDown_vals[0] / pi_zero_thermal
+plt.plot(pT*1000, ratio, color="green", label=r"Python formula")
+plt.vlines(0.07, 0.1,50, color='gray')
 print("Ratio at p_T = ", pT[0], " is ", ratio[0])
 print("Ratio at p_T = ", pT[-1], " is ", ratio[-1])
-plt.ylim(0.1, 50)
-plt.xlim(0, 2)
+plt.ylim(0.05, 50)
+plt.xlim(1, 6000)
+plt.xscale("log")
 plt.yscale("log")
 plt.legend(fontsize=13, title=r"$T = 230$ MeV", title_fontsize=13, loc="best")
 plt.ylabel(r"$\gamma_{decay}/\pi^0$", fontsize=20)
