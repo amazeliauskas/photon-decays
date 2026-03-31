@@ -3,6 +3,7 @@
 
 import numpy as np
 import scipy.integrate as integrate
+from scipy.optimize import brentq
 from scipy.special import ellipk
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -98,13 +99,13 @@ def integrand_factor_massive(qT, b, ma, mb, mc, pT, Debug=False):
                     print("Warning! Invalid EllipticK argument. Returning NaN.")
                 raise ValueError()
             phiIntegral = np.sqrt(2)*np.sqrt((am + 1)/(am + ap))/np.sqrt(am+1)*ellipk(argument)
-        return norm/pT/qT*phiIntegral
+        return norm/qT*phiIntegral
     except ValueError:
-        return np.nan
+        return 0.0  # outside physical range [qTminus, qTplus], kernel is zero
     except ZeroDivisionError:
         if Debug:
-            print("Warning! Division by zero, returning NaN")
-        return np.nan
+            print("Warning! Division by zero, returning 0")
+        return 0.0
 
 def integrand_factor_massless(qT, b, ma, mb, mc, pT, Debug=False):
     try:
@@ -136,6 +137,17 @@ def integrand_factor_massless(qT, b, ma, mb, mc, pT, Debug=False):
         return np.nan
 
 
+def get_qTstar(ma, mb, mc, pT):
+    """Find qT* where a_- = -1, the transition between the two EllipticK branches.
+    For massless (mb=mc=0) this is -qTminus exactly.
+    For massive, solve getAminus(qT*) = -1 numerically."""
+    if (mb == 0) and (mc == 0):
+        return -get_qTminus(ma, mb, mc, pT)
+    qTplus = get_qTplus(ma, mb, mc, pT)
+    return brentq(lambda qT: getAminus(qT, ma, mb, mc, pT) + 1,
+                  1e-10, qTplus, xtol=1e-12, rtol=1e-10)
+
+
 def getFeedDown_anadNa(pT, ma, mb, mc, b, dNa_dpT, dNa_dpT_args, EpsRel=1e-4, Debug=False):
     vals = np.zeros_like(pT)
     vals_err = np.zeros_like(pT)
@@ -146,19 +158,21 @@ def getFeedDown_anadNa(pT, ma, mb, mc, b, dNa_dpT, dNa_dpT_args, EpsRel=1e-4, De
         args = (b, ma, mb, mc, p, Debug)
         if (mb == 0) and (mc == 0):
             integ = lambda qT: integrand_factor_massless(qT, *args)*dNa_dpT(qT, *dNa_dpT_args)
-            # For pT < ma/2, qTminus < 0 and the integration starts at qmin=0.
-            # qT* = -qTminus is an interior logarithmic singularity (EllipticK diverges
-            # as am -> -1). Split at qT* so quad sees it only as an endpoint singularity
-            # in each sub-interval (quad cannot use points= with infinite limits).
-            if qTminus < 0:
-                qstar = -qTminus
-                v1, e1 = integrate.quad(integ, qmin, qstar, epsabs=1e-10, epsrel=EpsRel, limit=200)
-                v2, e2 = integrate.quad(integ, qstar, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
-                vals[i], vals_err[i] = v1 + v2, e1 + e2
-            else:
-                vals[i], vals_err[i] = integrate.quad(integ, qmin, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
         else:
             integ = lambda qT: integrand_factor_massive(qT, *args)*dNa_dpT(qT, *dNa_dpT_args)
+            # For massive case, qTplus ~ ma/mb^2 diverges as mb->0 causing quad to fail.
+            # integrand_factor_massive already returns 0 outside [qTminus, qTplus], so
+            # using np.inf lets quad use its efficient infinite-range substitution.
+            qmax = np.inf
+        if qTminus < 0:
+            # Interior logarithmic singularity at qT* where am = -1 (EllipticK -> inf).
+            # Split so quad sees it only as an endpoint singularity in each sub-interval.
+            # Note: quad cannot use points= with infinite upper limits.
+            qstar = get_qTstar(ma, mb, mc, p)
+            v1, e1 = integrate.quad(integ, qmin, qstar, epsabs=1e-10, epsrel=EpsRel, limit=200)
+            v2, e2 = integrate.quad(integ, qstar, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
+            vals[i], vals_err[i] = v1 + v2, e1 + e2
+        else:
             vals[i], vals_err[i] = integrate.quad(integ, qmin, qmax, epsabs=1e-10, epsrel=EpsRel, limit=200)
     return vals, vals_err
 
@@ -169,7 +183,7 @@ def thermaldNadpT(p, m, T):
 
 
 # pi^0 -> gamma gamma: ma = pi^0, mb = mc = gamma (massless)
-ma = 0.14
+ma = 0.140
 T = 0.230
 ini_args = (ma, T)
 mb = 0.0

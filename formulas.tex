@@ -1,0 +1,152 @@
+\section{Decay map applied to invariant spectrum}
+
+So the decay map for isotropic two-body decay
+\begin{equation}
+		E_{\p}\frac{dN_b}{d^3\p} =
+	\int \frac{d^3 \q}{(2\pi)^3 2E_q}  D^a_{b|c}(\p,\q) E_{q}\frac{d^3N_a}{d^3 \q}
+\end{equation}
+where the decay map for isotropic s-wave decay is given by
+\begin{align}
+D^a_{b|c}(\p,\q)
+&=b\frac{4\pi^2 m_a}{|\p^*|} \delta( q^\mu p_\mu+ m_a E^*)
+\end{align}
+ where $b$ is the branching ratio for $a\rightarrow b+c$ process
+and $|\p^*|$ is the decay particle momenta in resonance rest-frame, which is a constant depending on the particle masses. 
+\begin{equation}
+|\p^*| = \frac{\sqrt{(m_c^2-m_a^2-m_b^2)^2-4 m_a^2 m_b^2}}{2m_a}, \quad E^{*} = \sqrt{|\p^*|^2+m_b^2}=\frac{m_a^2+m_b^2-m_c^2}{2m_a}
+\end{equation}
+See the appendix for the explicit derivation.
+
+In rapidity coordinates
+
+\begin{equation}
+    \begin{split}
+		\frac{dN_b}{d\phi_p p_T dp_T dy_p} & =
+	\int \frac{d\phi_q q_T dq_T dy_q}{(2\pi)^3 2}  b\frac{4\pi^2 m_a}{|\p^*|}\\
+    & \times\delta(-m_{q,T} m_{p,T}\cosh (y_p-y_q)+ p_T q_T \cos(\phi_p-\phi_q) + m_a E^*)\frac{d^3N_a}{d\phi_q q_T dq_T dy_q}
+    \end{split}
+\end{equation}
+
+We will assume that initial particle distribution is rapidity and azimuthal angle independent (then $y_p$ and $\phi_p$ can be absorbed in integration variable shift). We can eliminate rapidity integration
+\begin{equation}
+		\frac{dN_b}{d\phi_p p_T dp_T dy_p} =
+	\int_{\text{max}(q_T^-,0)}^{q_T^+} \frac{ q_T dq_T}{(2\pi)^3 2}  \int_{\phi_-}^{\phi_+} d \phi_q b\frac{4\pi^2 m_a}{|\p^*|} \frac{2}{\sqrt{(p_T q_T \cos(\phi_q) + m_a E^*)^2 -m^2_{q,T} m^2_{p,T}}}\frac{d^3N_a}{q_T dq_T}
+\end{equation}
+where we summed over two possible roots of $-m_{q,T} m_{p,T}\cosh (y_p-y^*_q)+ p_T q_T \cos(\phi_p-\phi_q) + m_a E^*=0$. Here the union of regions $q_T\in [q_T^-,q_T^+]$ and $\phi \in [\phi_-,\phi_+]$ defines the values of $q_T$ and $\phi$ for which $-m_{q,T} m_{p,T}\cosh (y_p-y^*_q)+ p_T q_T \cos(\phi_p-\phi_q) + m_a E^*=0$ has a solution.
+
+This is possible if
+\begin{equation}
+\frac{p_T q_T \cos(\phi_q) + m_a E^*}{m_{q,T} m_{p,T}}>1
+\end{equation}
+If $\cos \phi_q=1$, then $q_T$ has to be between
+\begin{equation}
+    q_T^\pm = \frac{m_a}{m_b^2} (p_T \sqrt{m_b^2+p_*^2} \pm p_* \sqrt{m_b^2+p_T^2})
+\end{equation}
+However $q_T^-<0$ if $p_T<p_*$.
+For small $m_b$
+\begin{equation}
+    q_T^- = \frac{m_a(p_T^2-p_*^2) }{2p_T p_*}
+\end{equation}
+while $q_T^+$ grows to infinity.
+
+Given allowed $q_T$, what are the ranges of angle?
+Since
+\begin{equation}
+\cos(\phi_q)>\frac{{m_{q,T} m_{p,T}}-m_a E^*}{p_T q_T}
+\end{equation}
+we get
+\begin{equation}
+    \phi_{\pm} = \pm \arccos\left[\frac{{m_{q,T} m_{p,T}}-m_a E^*}{p_T q_T}\right]
+\end{equation}
+
+For solutions to exist, we need
+\begin{equation}
+ -1<   \frac{{m_{q,T} m_{p,T}}-m_a E^*}{p_T q_T} <1
+\end{equation}
+This is equivalent to $a_- \in (-1, 1)$, which is satisfied for $q_T^- < q_T < q_T^+$ when $q_T^->0$.
+When $q_T^- < 0$ (i.e.\ $p_T < p_*$), the integration starts at $q_T=0$ and $a_-$ ranges from $-\infty$ at $q_T=0$ through the transition point
+\begin{equation}
+    q_T^* = -q_T^-
+\end{equation}
+where $a_-=-1$, and then $a_->-1$ for $q_T > q_T^*$.
+
+We can write
+\begin{align}
+&\int_{\phi_-}^{\phi_+} d \phi_q  \frac{2}{\sqrt{(p_T q_T \cos(\phi_q) + m_a E^*)^2 -m^2_{q,T} m^2_{p,T}}}=\\
+&=\frac{4}{p_T q_T}\int_{\max(a_-,-1)}^1 \frac{dx}{\sqrt{1-x^2}}   \frac{1}{\sqrt{(x -a_-)(x+a_+)}}
+\end{align}
+where the lower limit is $a_-$ when $a_- \geq -1$ and $-1$ when $a_- < -1$. The substitution $x = \cos\phi_q$ has been used together with the symmetry $\phi_- = -\phi_+$.
+
+\paragraph{Case $a_- \geq -1$ (i.e.\ $q_T \geq q_T^*$).}
+The four branch points of the integrand are ordered $-a_+ < -1 \leq a_- \leq x \leq 1$. Using the standard reduction to Legendre form gives
+\begin{align}
+\int_{a_-}^1 \frac{dx}{\sqrt{1-x^2}}   \frac{1}{\sqrt{(x -a_-)(x+a_+)}}
+= \frac{\sqrt{2} \sqrt{\frac{a_{-}+1}{a_{-}+a_{+}}} \, K\!\left(\frac{(1-a_-) (a_+-1)}{2 (a_{-}+a_{+})}\right)}{\sqrt{a_-+1}}
+\end{align}
+where $K(m) = \int_0^{\pi/2}(1 - m\sin^2\theta)^{-1/2}\,d\theta$ is the complete elliptic integral of the first kind (parameter convention, $0\leq m < 1$).
+
+\paragraph{Case $a_- < -1$ (i.e.\ $q_T < q_T^*$, only relevant when $p_T < p_*$).}
+The integration is over the full interval $[-1,1]$ and the four branch points are ordered $x_1 \equiv -a_+ < x_2 \equiv a_- < x_3 \equiv -1 < x_4 \equiv 1$ (the ordering $x_1<x_2$ follows from $a_-+a_+>0$, which holds since $a_-+a_+ = 2m_{q,T}m_{p,T}/(p_T q_T)>0$). Applying the Möbius substitution
+\begin{equation}
+    x = \frac{x_3(x_4-x_2) - x_2(x_4-x_3)s^2}{(x_4-x_2)-(x_4-x_3)s^2}
+\end{equation}
+which maps $x\in[x_3,x_4]$ to $s\in[0,1]$ and brings the integrand to Legendre normal form, one finds the standard result
+\begin{equation}
+\int_{x_3}^{x_4} \frac{dt}{\sqrt{(x_4-t)(t-x_3)(t-x_2)(t-x_1)}} = \frac{2\,K(k^2)}{\sqrt{(x_4-x_2)(x_3-x_1)}}
+\end{equation}
+with $k^2 = \dfrac{(x_4-x_3)(x_2-x_1)}{(x_4-x_2)(x_3-x_1)}$. Substituting our roots gives
+\begin{align}
+\int_{-1}^1 \frac{dx}{\sqrt{1-x^2}}   \frac{1}{\sqrt{(x -a_-)(x+a_+)}}
+= \frac{2\,K(k^2)}{\sqrt{(1-a_-)(a_+-1)}}
+\end{align}
+with
+\begin{equation}
+    k^2 = \frac{2(a_-+a_+)}{(1-a_-)(a_+-1)}, \qquad 0 < k^2 < 1
+\end{equation}
+The bound $k^2<1$ follows from $(1-a_-)(a_+-1) - 2(a_-+a_+) = -(a_-+1)(a_++1) > 0$.
+Both branches diverge logarithmically as $K(k^2)\sim -\tfrac{1}{2}\ln(1-k^2)$ when $k^2\to 1^-$ (i.e.\ $a_-\to -1$), corresponding to the integrable logarithmic singularity at $q_T = q_T^*$.
+
+Therefore we obtain a one-dimensional integral
+
+\begin{equation}
+		\frac{dN_b}{dp_T} =\frac{b\, m_a}{|\p^*|\pi}
+	\int_{\text{max}(q_T^-,0)}^{q_T^+} \frac{ dq_T}{q_T}\, \mathcal{I}(a_-,a_+)\,\frac{dN_a}{ dq_T}
+\end{equation}
+with
+\begin{equation}
+    a_{\pm}= \frac{\pm m_a E^* +m_{q,T} m_{p,T}}{p_T q_T}
+\end{equation}
+and
+\begin{equation}
+\mathcal{I}(a_-,a_+) = \begin{cases}
+\dfrac{\sqrt{2}\,\sqrt{\dfrac{a_-+1}{a_-+a_+}}}{\sqrt{a_-+1}}\,K\!\left(\dfrac{(1-a_-)(a_+-1)}{2(a_-+a_+)}\right) & a_- \geq -1,\\[10pt]
+\dfrac{2\,K(k^2)}{\sqrt{(1-a_-)(a_+-1)}},\quad k^2 = \dfrac{2(a_-+a_+)}{(1-a_-)(a_+-1)} & a_- < -1.
+\end{cases}
+\end{equation}
+When $q_T^- < 0$ the integral must be split at $q_T^*=-q_T^-$ to resolve the integrable logarithmic singularity there.
+
+
+
+This is result for $m_b>0$. We need to reduce to $m_b=0$
+
+\subsection{Massless case  $m_b=m_c=0$}
+
+In massless case
+\begin{equation}
+|\p^*| = \frac{\sqrt{(m_c^2-m_a^2-m_b^2)^2-4 m_a^2 m_b^2}}{2m_a}=\frac{m_a}{2}, \quad E^{*} = \sqrt{|\p^*|^2+m_b^2}=\frac{m_a}{2}
+\end{equation}
+
+\begin{equation}
+    a_{\pm}= \frac{\pm m^2_a/2 +\sqrt{m_a^2+q_T^2}p_{T}}{p_T q_T}
+\end{equation}
+
+\begin{equation}
+		\frac{dN_b}{dp_T} =\frac{2b}{\pi}
+	\int_{\text{max}(q_T^-,0)}^{\infty} \frac{ dq_T}{ q_T}\, \mathcal{I}(a_-,a_+)\,\frac{dN_a}{ dq_T}
+\end{equation}
+where $\mathcal{I}(a_-,a_+)$ is defined in the two-branch formula above.
+\begin{equation}
+    q_T^- = \frac{p_T^2-m_a^2/4}{p_T}
+\end{equation}
+For $p_T < m_a/2$ one has $q_T^- < 0$, so the lower limit is $0$ and the integral must be split at $q_T^* = -q_T^- = m_a^2/(4p_T) - p_T$ where $a_-=-1$.
+
