@@ -1,3 +1,5 @@
+Copyright Q'inich Coc and Aleksas Mazeliauskas, 2025
+
 # Photon decays
 
 # Implementation
